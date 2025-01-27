@@ -1,10 +1,21 @@
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart';
+
+class NoteDetailScreen extends StatefulWidget {
+  final Note note;
+
+  const NoteDetailScreen({Key? key, required this.note}) : super(key: key);
+
+  @override
+  State<NoteDetailScreen> createState() => _NoteDetailScreenState();
+}
 
 class _NoteDetailScreenState extends State<NoteDetailScreen> {
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   late List<String> _images; // 이미지 리스트를 상태로 관리
+  bool _isEditingTitle = false;  // 타이틀 편집 상태 추가
 
   @override
   void initState() {
@@ -113,22 +124,52 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Note'),
+        title: _isEditingTitle 
+          ? TextField(
+              controller: _titleController,
+              style: TextStyle(color: Colors.black),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(horizontal: 15),
+              ),
+              autofocus: true,
+              onSubmitted: (value) {
+                setState(() {
+                  _isEditingTitle = false;
+                });
+              },
+            )
+          : GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isEditingTitle = true;
+                });
+              },
+              child: Text(
+                _titleController.text,
+                style: TextStyle(color: Colors.black),
+              ),
+            ),
+        backgroundColor: Colors.white,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextField(
-              controller: _titleController,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-              decoration: const InputDecoration(
-                hintText: 'Title',
-                border: InputBorder.none,
+            GestureDetector(
+              onTap: () {
+                setState(() {
+                  _isEditingTitle = true;
+                });
+              },
+              child: Text(
+                _titleController.text,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 8),
@@ -136,7 +177,7 @@ class _NoteDetailScreenState extends State<NoteDetailScreen> {
               controller: _contentController,
               maxLines: null,
               decoration: const InputDecoration(
-                hintText: 'Content',
+                hintText: 'Write your note...',
                 border: InputBorder.none,
               ),
             ),

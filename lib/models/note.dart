@@ -1,27 +1,31 @@
 import 'package:flutter/foundation.dart';
 
 class Note {
-  final String? id;
+  final String id;
+  final String? title;
   final String? content;
   final List<String>? images;
   final DateTime createdAt;
 
-  Note({
-    this.id,
+  const Note({
+    required this.id,
+    this.title,
     this.content,
     this.images,
-    DateTime? createdAt,
-  }) : this.createdAt = createdAt ?? DateTime.now();
+    required this.createdAt,
+  });
 
   // 복사본 생성을 위한 copyWith 메서드 추가
   Note copyWith({
     String? id,
+    String? title,
     String? content,
     List<String>? images,
     DateTime? createdAt,
   }) {
     return Note(
       id: id ?? this.id,
+      title: title ?? this.title,
       content: content ?? this.content,
       images: images ?? this.images,
       createdAt: createdAt ?? this.createdAt,
@@ -32,6 +36,7 @@ class Note {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
+      'title': title,
       'content': content,
       'images': images,
       'createdAt': createdAt.toIso8601String(),
@@ -40,10 +45,11 @@ class Note {
 
   factory Note.fromJson(Map<String, dynamic> json) {
     return Note(
-      id: json['id'],
-      content: json['content'],
-      images: List<String>.from(json['images'] ?? []),
-      createdAt: DateTime.parse(json['createdAt']),
+      id: json['id'] as String,
+      title: json['title'] as String?,
+      content: json['content'] as String?,
+      images: (json['images'] as List<dynamic>?)?.cast<String>(),
+      createdAt: DateTime.parse(json['createdAt'] as String),
     );
   }
 }

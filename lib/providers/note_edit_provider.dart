@@ -6,6 +6,7 @@ import '../services/note_service.dart';
 import 'note_list_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'note_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NoteEditProvider extends ChangeNotifier {
   final NoteService _noteService;
@@ -17,6 +18,17 @@ class NoteEditProvider extends ChangeNotifier {
   Note? get currentNote => _currentNote;
   bool get isSaving => _isSaving;
 
+  void initializeNewNote() {
+    final now = DateTime.now();
+    _currentNote = Note(
+      id: now.millisecondsSinceEpoch.toString(),
+      content: '',
+      images: [],
+      createdAt: now,
+    );
+    notifyListeners();
+  }
+
   Future<void> initializeWithImage() async {
     final noteService = NoteService();
     final imagePath = await noteService.pickImage();
@@ -26,37 +38,24 @@ class NoteEditProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> saveNote(BuildContext context) async {
+  Future<bool> saveNote(BuildContext context, {String? title}) async {
     try {
       if (_currentNote == null) {
-        // 새 노트 생성
+        final now = DateTime.now();
         _currentNote = Note(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          id: now.millisecondsSinceEpoch.toString(),
+          title: title,
           content: '',
           images: [],
-          createdAt: DateTime.now(),
+          createdAt: now,
         );
       }
 
-      // 내용이나 이미지가 있는 경우에만 저장
-      if ((_currentNote!.content?.isNotEmpty == true) || 
-          (_currentNote!.images?.isNotEmpty == true)) {
-        
-        final savedNote = await _noteService.saveNote(_currentNote!);
-        print('Note saved successfully: ${savedNote.id}');  // 디버그용
-        
-        // NoteProvider를 통해 노트 목록 갱신
-        await context.read<NoteProvider>().refreshNotes();
-        return true;
-      } else {
-        print('Note is empty, not saving');  // 디버그용
-        return false;
-      }
+      final savedNote = await _noteService.saveNote(_currentNote!);
+      await context.read<NoteProvider>().refreshNotes();
+      return true;
     } catch (e) {
-      print('Error in saveNote: $e');  // 디버그용
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to save note: $e')),
-      );
+      print('Error in saveNote: $e');
       return false;
     }
   }
@@ -73,9 +72,10 @@ class NoteEditProvider extends ChangeNotifier {
     if (image != null) {
       if (_currentNote == null) {
         _currentNote = Note(
-          id: DateTime.now().toString(), // 임시 ID
+          id: DateTime.now().toString(),
           content: '',
           images: [image.path],
+          createdAt: DateTime.now(),
         );
       } else {
         final currentImages = _currentNote!.images ?? [];
@@ -114,5 +114,12 @@ class NoteEditProvider extends ChangeNotifier {
   void initializeNote(Note note) {
     _currentNote = note;
     notifyListeners();
+  }
+
+  void updateTitle(String title) {
+    if (_currentNote != null) {
+      _currentNote = _currentNote!.copyWith(title: title);
+      notifyListeners();
+    }
   }
 }

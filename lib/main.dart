@@ -4,27 +4,21 @@ import 'services/note_service.dart';
 import 'providers/note_edit_provider.dart';
 import 'providers/note_provider.dart';
 import 'screens/note_list_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();  // Flutter 바인딩 초기화 추가
-  
-  final noteService = NoteService();  // NoteService 인스턴스 생성
-  final noteProvider = NoteProvider();  // NoteProvider 인스턴스 생성
+  final noteService = NoteService();
+  final noteProvider = NoteProvider();
+  final noteEditProvider = NoteEditProvider(noteService);
   
   runApp(
     MultiProvider(
       providers: [
-        Provider.value(
-          value: noteService,
-        ),
-        ChangeNotifierProvider.value(
-          value: noteProvider,
-        ),
-        ChangeNotifierProvider(
-          create: (context) => NoteEditProvider(noteService),
-        ),
+        Provider.value(value: noteService),
+        ChangeNotifierProvider.value(value: noteProvider),
+        ChangeNotifierProvider.value(value: noteEditProvider),
       ],
-      child: MyApp(),  // const 제거
+      child: MyApp(),
     ),
   );
 }

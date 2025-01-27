@@ -6,41 +6,108 @@ import '../models/note.dart';  // Note 모델 import
 import '../providers/note_edit_provider.dart';  // 프로바이더 import
 import '../providers/note_provider.dart';  // NoteProvider import
 
-class NoteEditScreen extends StatelessWidget {
+class NoteEditScreen extends StatefulWidget {
   final Note? note;
-
+  
   const NoteEditScreen({Key? key, this.note}) : super(key: key);
+
+  @override
+  State<NoteEditScreen> createState() => _NoteEditScreenState();
+}
+
+class _NoteEditScreenState extends State<NoteEditScreen> {
+  late TextEditingController _titleController;
+  bool _isEditingTitle = false;
+
+  String _formatTitle(DateTime date, int noteCount) {
+    try {
+      final formattedDate = DateFormat('MMM dd EEE').format(date);
+      // 첫 번째 노트는 번호 없이, 그 이후부터 번호 추가
+      return noteCount == 0 ? formattedDate : '$formattedDate (${noteCount})';
+    } catch (e) {
+      print('Error formatting date: $e');
+      return DateFormat('MMM dd').format(date);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final noteProvider = context.read<NoteProvider>();
+    final today = DateTime.now();
+    final todayNotes = noteProvider.notes.where((note) {
+      final noteDate = note.createdAt;
+      return noteDate.year == today.year && 
+             noteDate.month == today.month && 
+             noteDate.day == today.day;
+    }).length;
+
+    final initialTitle = widget.note != null 
+        ? widget.note!.title ?? _formatTitle(widget.note!.createdAt, 0)
+        : _formatTitle(DateTime.now(), todayNotes);
+
+    _titleController = TextEditingController(text: initialTitle);
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<NoteEditProvider>();
     
-    // 날짜 포맷 추가
-    String formattedDate = '';
-    if (note != null) {
-      formattedDate = DateFormat('MMM dd yyyy').format(note!.createdAt);
-    } else {
-      formattedDate = DateFormat('MMM dd yyyy').format(DateTime.now());
-    }
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (note != null && provider.currentNote == null) {
-        provider.initializeNote(note!);
-      }
-    });
-
     return Scaffold(
       appBar: AppBar(
-        title: Text(formattedDate),  // 날짜 형식으로 타이틀 변경
+        title: TextField(
+          controller: _titleController,
+          style: TextStyle(color: Colors.black),  // 흰색에서 검정색으로 변경
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.symmetric(horizontal: 15),
+          ),
+          autofocus: true,
+          onSubmitted: (value) {
+            setState(() {
+              _isEditingTitle = false;
+              provider.updateTitle(value);
+            });
+          },
+        ),
+        backgroundColor: Colors.white,
+        elevation: 0,
         actions: [
+          if (_isEditingTitle)
+            IconButton(
+              icon: Icon(Icons.check),
+              onPressed: () {
+                setState(() {
+                  _isEditingTitle = false;
+                  provider.updateTitle(_titleController.text);
+                });
+              },
+            ),
           IconButton(
             icon: Icon(Icons.save),
             onPressed: () async {
-              final success = await provider.saveNote(context);
-              if (success) {
-                // 저장 성공 시 노트 리스트 갱신하고 화면 닫기
-                context.read<NoteProvider>().refreshNotes();
-                Navigator.pop(context);
+              try {
+                final success = await provider.saveNote(
+                  context,
+                  title: _titleController.text,  // 타이틀 전달
+                );
+                if (success) {
+                  await context.read<NoteProvider>().refreshNotes();
+                  Navigator.pop(context);
+                }
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to save note: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
               }
             },
           ),

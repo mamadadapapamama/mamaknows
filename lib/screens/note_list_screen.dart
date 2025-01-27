@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import '../providers/note_provider.dart';
 import '../models/note.dart';
 import 'note_edit_screen.dart';
+import '../providers/note_edit_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NoteListScreen extends StatelessWidget {
   const NoteListScreen({Key? key}) : super(key: key);
@@ -60,7 +62,7 @@ class NoteListScreen extends StatelessWidget {
                           ),
                   ),
                   title: Text(
-                    formattedDate,
+                    note.title ?? formattedDate,
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
@@ -85,6 +87,8 @@ class NoteListScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
+          context.read<NoteEditProvider>().initializeNewNote();
+          
           await Navigator.push(
             context,
             MaterialPageRoute(
