@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/note.dart';
 import '../services/note_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class NoteProvider extends ChangeNotifier {
   final List<Note> _notes = [];

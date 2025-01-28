@@ -1,17 +1,14 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/note.dart';
 import '../services/note_service.dart';
-import 'note_list_provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'note_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class NoteEditProvider extends ChangeNotifier {
   final NoteService _noteService;
   Note? _currentNote;
-  bool _isSaving = false;
+  final bool _isSaving = false;
 
   NoteEditProvider(this._noteService);
   
@@ -39,6 +36,8 @@ class NoteEditProvider extends ChangeNotifier {
   }
 
   Future<bool> saveNote(BuildContext context, {String? title}) async {
+    final provider = context.read<NoteProvider>();
+    
     try {
       if (_currentNote == null) {
         final now = DateTime.now();
@@ -51,8 +50,8 @@ class NoteEditProvider extends ChangeNotifier {
         );
       }
 
-      final savedNote = await _noteService.saveNote(_currentNote!);
-      await context.read<NoteProvider>().refreshNotes();
+      await _noteService.saveNote(_currentNote!);
+      await provider.refreshNotes();
       return true;
     } catch (e) {
       print('Error in saveNote: $e');

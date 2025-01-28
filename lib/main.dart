@@ -4,7 +4,6 @@ import 'services/note_service.dart';
 import 'providers/note_edit_provider.dart';
 import 'providers/note_provider.dart';
 import 'screens/note_list_screen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   final noteService = NoteService();

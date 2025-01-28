@@ -95,19 +95,28 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
               try {
                 final success = await provider.saveNote(
                   context,
-                  title: _titleController.text,  // 타이틀 전달
+                  title: _titleController.text,
                 );
                 if (success) {
+                  // 노트 목록 새로고침
                   await context.read<NoteProvider>().refreshNotes();
-                  Navigator.pop(context);
+                  if (mounted) {
+                    Navigator.pop(context);
+                    // 저장 성공 메시지 표시
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('노트가 저장되었습니다')),
+                    );
+                  }
                 }
               } catch (e) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to save note: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to save note: $e'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
               }
             },
           ),

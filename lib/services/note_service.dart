@@ -66,8 +66,20 @@ class NoteService {
   }
 
   Future<Note> updateNote(Note note) async {
-    // ... 업데이트 로직 ...
-    return note;
+    try {
+      // 기존 노트의 제목을 보존
+      final existingNote = _notes[note.id];
+      final updatedNote = note.copyWith(
+        title: note.title?.isNotEmpty == true 
+            ? note.title 
+            : existingNote?.title,
+      );
+      _notes[note.id] = updatedNote;
+      await _saveToStorage();
+      return updatedNote;
+    } catch (e) {
+      throw Exception('Failed to update note: $e');
+    }
   }
 
   String _generateTitle(DateTime date, int noteCount) {
@@ -81,15 +93,19 @@ class NoteService {
     }
 
     try {
+      // 기존 노트의 제목을 보존
+      final existingNote = _notes[note.id];
       final savedNote = Note(
         id: note.id,
-        title: note.title ?? _generateTitle(note.createdAt, _notes.length),
+        title: note.title?.isNotEmpty == true 
+            ? note.title 
+            : existingNote?.title ?? _generateTitle(note.createdAt, _notes.length),
         content: note.content ?? '',
         images: note.images ?? [],
         createdAt: note.createdAt,
       );
       _notes[note.id] = savedNote;
-      await _saveToStorage();  // 저장소에 저장
+      await _saveToStorage();
       return savedNote;
     } catch (e) {
       throw Exception('Failed to save note: $e');

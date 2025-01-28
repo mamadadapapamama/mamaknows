@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../providers/note_provider.dart';
-import '../models/note.dart';
 import 'note_edit_screen.dart';
 import '../providers/note_edit_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class NoteListScreen extends StatelessWidget {
   const NoteListScreen({Key? key}) : super(key: key);
@@ -37,11 +35,22 @@ class NoteListScreen extends StatelessWidget {
             itemCount: notes.length,
             itemBuilder: (context, index) {
               final note = notes[index];
-              final formattedDate = DateFormat('EEE MMM dd').format(note.createdAt);
+              final formattedDate = DateFormat('MMM dd EEE').format(note.createdAt);
               
               return Card(
                 margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: ListTile(
+                  onTap: () async {
+                    final noteProvider = context.read<NoteProvider>();
+                    
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NoteEditScreen(note: note),
+                      ),
+                    );
+                    noteProvider.refreshNotes();
+                  },
                   leading: SizedBox(
                     width: 56,
                     height: 56,
@@ -63,22 +72,13 @@ class NoteListScreen extends StatelessWidget {
                   ),
                   title: Text(
                     note.title ?? formattedDate,
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
                     note.content ?? '',
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onTap: () async {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NoteEditScreen(note: note),
-                      ),
-                    );
-                    noteProvider.refreshNotes();
-                  },
                 ),
               );
             },
@@ -87,7 +87,10 @@ class NoteListScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          context.read<NoteEditProvider>().initializeNewNote();
+          final editProvider = context.read<NoteEditProvider>();
+          final noteProvider = context.read<NoteProvider>();
+          
+          editProvider.initializeNewNote();
           
           await Navigator.push(
             context,
@@ -95,9 +98,9 @@ class NoteListScreen extends StatelessWidget {
               builder: (context) => const NoteEditScreen(),
             ),
           );
-          context.read<NoteProvider>().refreshNotes();
+          noteProvider.refreshNotes();
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
         backgroundColor: Colors.blue,
       ),
     );
