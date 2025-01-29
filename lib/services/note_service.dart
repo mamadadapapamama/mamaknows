@@ -1,10 +1,9 @@
-import 'dart:io';
-import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
 import '../models/note.dart';  // Note 모델 import
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';  // 올바른 방식
+import 'translation_service.dart';  // 추가
 
 class NoteService {
   static final NoteService _instance = NoteService._internal();
@@ -13,6 +12,7 @@ class NoteService {
 
   final String _storageKey = 'notes';
   final Map<String, Note> _notes = {};
+  final TranslationService _translationService = TranslationService();  // 추가
 
   Future<void> _loadNotes() async {
     try {
@@ -131,4 +131,17 @@ class NoteService {
   }
 
   Future<void> deleteNote(String id) async => _notes.remove(id);
+
+  Future<Map<String, String>> translateText(String text) async {
+    try {
+      return await _translationService.processImage(text);  // translation_service 사용
+    } catch (e) {
+      print('Error translating text: $e');
+      throw Exception('번역 중 오류가 발생했습니다');
+    }
+  }
+
+  Future<void> speakText(String text, String languageCode) async {
+    await _translationService.speak(text, language: languageCode);
+  }
 }

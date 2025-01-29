@@ -1,10 +1,10 @@
-
 class Note {
   final String id;
   final String? title;
   final String? content;
   final List<String>? images;
   final DateTime createdAt;
+  final List<TranslatedText>? translations;
 
   const Note({
     required this.id,
@@ -12,6 +12,7 @@ class Note {
     this.content,
     this.images,
     required this.createdAt,
+    this.translations,
   });
 
   // 복사본 생성을 위한 copyWith 메서드 추가
@@ -21,6 +22,7 @@ class Note {
     String? content,
     List<String>? images,
     DateTime? createdAt,
+    List<TranslatedText>? translations,
   }) {
     return Note(
       id: id ?? this.id,
@@ -28,6 +30,7 @@ class Note {
       content: content ?? this.content,
       images: images ?? this.images,
       createdAt: createdAt ?? this.createdAt,
+      translations: translations ?? this.translations,
     );
   }
 
@@ -39,6 +42,7 @@ class Note {
       'content': content,
       'images': images,
       'createdAt': createdAt.toIso8601String(),
+      'translations': translations?.map((t) => t.toJson()).toList(),
     };
   }
 
@@ -49,6 +53,41 @@ class Note {
       content: json['content'] as String?,
       images: (json['images'] as List<dynamic>?)?.cast<String>(),
       createdAt: DateTime.parse(json['createdAt'] as String),
+      translations: (json['translations'] as List<dynamic>?)
+          ?.map((t) => TranslatedText.fromJson(t as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+}
+
+class TranslatedText {
+  final String original;
+  final String translated;
+  final String pinyin;
+  final bool isHighlighted;
+
+  TranslatedText({
+    required this.original,
+    required this.translated,
+    required this.pinyin,
+    this.isHighlighted = false,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'original': original,
+      'translated': translated,
+      'pinyin': pinyin,
+      'isHighlighted': isHighlighted,
+    };
+  }
+
+  factory TranslatedText.fromJson(Map<String, dynamic> json) {
+    return TranslatedText(
+      original: json['original'] as String,
+      translated: json['translated'] as String,
+      pinyin: json['pinyin'] as String,
+      isHighlighted: json['isHighlighted'] as bool? ?? false,
     );
   }
 }

@@ -54,7 +54,6 @@ class NoteEditProvider extends ChangeNotifier {
       await provider.refreshNotes();
       return true;
     } catch (e) {
-      print('Error in saveNote: $e');
       return false;
     }
   }

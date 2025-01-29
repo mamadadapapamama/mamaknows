@@ -2,9 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/note.dart';  // Note 모델 import
 import '../providers/note_edit_provider.dart';  // 프로바이더 import
 import '../providers/note_provider.dart';  // NoteProvider import
+import '../services/translation_service.dart';
 
 class NoteEditScreen extends StatefulWidget {
   final Note? note;
@@ -18,6 +20,7 @@ class NoteEditScreen extends StatefulWidget {
 class _NoteEditScreenState extends State<NoteEditScreen> {
   late TextEditingController _titleController;
   bool _isEditingTitle = false;
+  final TranslationService _translationService = TranslationService();
 
   String _formatTitle(DateTime date, int noteCount) {
     try {
@@ -53,6 +56,62 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
   void dispose() {
     _titleController.dispose();
     super.dispose();
+  }
+
+  // 테스트용 메서드
+  Future<void> _testTranslation() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (image != null) {
+        // 로딩 표시
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('이미지 처리 중...')),
+          );
+        }
+
+        final result = await _translationService.processImage(image.path);
+        
+        // 결과 출력
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('번역 결과'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('원문: ${result['originalText']}'),
+                  const SizedBox(height: 8),
+                  Text('번역: ${result['translatedText']}'),
+                  const SizedBox(height: 8),
+                  Text('병음: ${result['pinyin']}'),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('확인'),
+                ),
+              ],
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('에러 발생: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      print('Translation error: $e');  // 콘솔에도 에러 출력
+    }
   }
 
   @override
@@ -189,6 +248,10 @@ class _NoteEditScreenState extends State<NoteEditScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _testTranslation,
+        child: Icon(Icons.translate),
       ),
     );
   }
